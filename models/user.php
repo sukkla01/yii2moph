@@ -3,12 +3,13 @@
 namespace app\models;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
+use yii;
 
 class User extends ActiveRecord implements IdentityInterface{
     
     //กำหนดสถานะค่าเริ่มต้น 1
     const STATUS_NOTACTIVE=0;
-    const STATUS_ACTIVE=0;
+    const STATUS_ACTIVE=1;
     
     //กำหนดสิทธิ์ค่าเริ่มต้น 1
     const ROLE_USER=1;
@@ -32,8 +33,23 @@ class User extends ActiveRecord implements IdentityInterface{
             [['username','password_hash'],'required']
         ];
     }
+    
+    public function attributeLabels() {
+        return [
+            'username'=>'ชื่อผู้ใช้งาน',
+            'password_hash'=>'รหัสผ่าน'
+        ];
+    }
+    
+    public static function findByUsername($username) {
+        return static::findOne(['username'=>$username,
+              'status'=>self::STATUS_ACTIVE]);
+    }
 
-
+    public  function  validatePassword($password){
+        return  Yii::$app->security->validatePassword($password,$this->password_hash);
+        //return md5($password)===$this->password_hash;
+    }
 
 
 
@@ -44,7 +60,7 @@ class User extends ActiveRecord implements IdentityInterface{
     }
 
     public function getId() {
-        
+        return $this->getPrimaryKey();
     }
 
     public function validateAuthKey($authKey) {
@@ -52,6 +68,7 @@ class User extends ActiveRecord implements IdentityInterface{
     }
 
     public static function findIdentity($id) {
+        return static::findOne(['id'=>$id,'status'=>  self::STATUS_ACTIVE]);
         
     }
 
